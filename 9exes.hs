@@ -95,4 +95,168 @@ myLines = (flip split) '\n'
 -- already done l0l
 
 {-
+		 look at the following functions, figure what you think
+		the output lists will be, and then run them in your REPL to
+		verify (note that you will need the mySqr list from above in
+		scope to do this):
 
+		[x | x <- mySqr, rem x 2 == 0]
+          = [4, 16]
+
+		[(x, y) | x <- mySqr, y <- mySqr, x < 50, y > 50]
+          = no idea, maybe just mySqr since all y are < 50 ?
+            aha it was my other idea, the EMPTY list
+
+		take 5 [ (x, y) | x <- mySqr
+		, y <- mySqr, x < 50, y > 50 ]
+          = empty again, you can't fool me
+-}
+
+		-- Given the following:
+mySqr = [x^2 | x <- [1..5]]
+myCube = [y^3 | y <- [1..5]]
+		-- 1. First write an expression that will make tuples of the outputs
+		-- of mySqr and myCube.
+mSQ = [(x,y) | x <- mySqr, y <- myCube]
+		--2. Now alter that expression so that it only uses the x and y
+		--values that are less than 50.
+mSQ50 = [(x,y) | x <- mySqr, y <- myCube, x < 50, y < 50]
+		--3. Apply another function to that list comprehension to
+		--determine how many tuples inhabit your output list.
+lmsq = length mSQ50
+
+{-
+		Exercises: Bottom Madness
+		Will it blow up?
+		1. Will the following expression return a value or be ⊥?
+		[x^y | x <- [1..5], y <- [2, undefined]]
+n
+		2. take 1 $ [x^y | x <- [1..5], y <- [2, undefined]]
+y
+		3. sum [1, undefined, 3]
+y
+		4. length [1, 2, undefined]
+n
+		5. length $ [1, 2, 3] ++ undefined
+y
+		6. take 1 $ filter even [1, 2, 3, undefined]
+n
+		7. take 1 $ filter even [1, 3, undefined]
+y
+		8. take 1 $ filter odd [1, 3, undefined]
+n
+		9. take 2 $ filter odd [1, 3, undefined]
+n
+		10. take 3 $ filter odd [1, 3, undefined]
+y
+
+		Intermission: Is it in normal form?
+		For each expression below, determine whether it’s in:
+		1. normal form, which implies weak head normal form;
+		2. weak head normal form only; or,
+		3. neither.
+		Remember that an expression cannot be in normal form or
+		weak head normal form if the outermost part of the expression
+		isn’t a data constructor. It can’t be in normal form if any part
+		of the expression is unevaluated.
+		1. [1, 2, 3, 4, 5]
+nf
+		2. 1 : 2 : 3 : 4 : _
+w
+		3. enumFromTo 1 10
+n
+		4. length [1, 2, 3, 4, 5]
+n
+		5. sum (enumFromTo 1 10)
+n
+		6. ['a'..'m'] ++ ['n'..'z']
+n
+		7. (_, 'b')
+w
+
+		Exercises: More BOTTOMS
+		As always, we encourage you to try figuring out the answers
+		before you enter them into your REPL.
+		1. Will the following expression return a value or be ⊥?
+		take 1 $ map (+1) [undefined, 2, 3]
+b
+		2. Will the following expression return a value?
+		take 1 $ map (+1) [1, undefined, 3]
+val
+		3. Will the following expression return a value?
+		take 2 $ map (+1) [1, undefined, 3]
+b
+		4. What does the following mystery function do? What is its
+		type? Describe it (to yourself or a loved one) in standard
+		English and then test it out in the REPL to make sure you
+		were correct.
+		itIsMystery xs = map (\x -> elem x "aeiou") xs
+creates array of Bools whose values are either True for each vowel in the input string or False for other characters
+		5. What will be the result of the following functions:
+		a) map (^2) [1..10]
+range up to 10 of squares
+		b) map minimum [[1..10], [10..20], [20..30]]
+		-- n.b. `minimum` is not the same function
+		-- as the `min` that we used before
+[1, 10, 20]
+		c) map sum [[1..5], [1..5], [1..5]]
+[15, 15, 15]
+		6. Back in the Functions chapter, you wrote a function called
+		foldBool. That function exists in a module known as Data.Bool
+		and is called bool. Write a function that does the same (or
+		similar, if you wish) as the map (if-then-else) function you
+		saw above but uses bool instead of the if-then-else syntax.
+		Your first step should be bringing the bool function into
+		scope by typing import Data.Bool at your Prelude prompt.
+-}
+
+bool :: Bool -> a -> a -> a
+bool cond ift iff
+   | cond = ift
+   | otherwise = iff
+
+{-
+		Exercises: Filtering
+		1. Given the above, how might we write a filter function that
+		would give us all the multiples of 3 out of a list from 1-30?
+ts = [ x | x <- [1..30], (rem x 3) == 0 ]
+		2. Recalling what we learned about function composition,
+		how could we compose the above function with the length
+		function to tell us *how many* multiples of 3 there are
+		between 1 and 30?
+length ts
+		3. Next we’re going to work on removing all articles (’the’, ’a’,
+		and ’an’) from sentences. You want to get to something
+		that works like this:
+		Prelude> myFilter "the brown dog was a goof"
+		["brown","dog","was","goof"]
+		You may recall that earlier in this chapter we asked you
+		to write a function that separates a string into a list of
+		strings by separating them at spaces. That is a standard
+		library function called words. You may consider starting
+		this exercise by using words (or your version, of course).
+-}
+noArticles :: String -> [String]
+noArticles = filter (\x -> not . elem x $ ["the", "a", "an"]) . words
+
+{-
+		Zipping exercises
+		1. Write your own version of zip :: [a] -> [b] -> [(a, b)]
+		and ensure it behaves the same as the original.
+-}
+zippo :: [a] -> [b] -> [(a, b)]
+zippo [] _ = []
+zippo _ [] = []
+zippo (x:xs) (y:ys) = (x,y):(zippo xs ys)
+{-
+		2. Do what you did for zip, but now for zipWith :: (a -> b
+		-> c) -> [a] -> [b] -> [c]
+-}
+zippoWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+zippoWith f _ [] = []
+zippoWith f [] _ = []
+zippoWith f (x:xs) (y:ys) = (f x y):(zippoWith f xs ys)
+{-
+		3. Rewrite your zip in terms of the zipWith you wrote.
+-}
+zippoo = zippoWith (\x -> \y -> (x, y))

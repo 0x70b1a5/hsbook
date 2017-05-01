@@ -235,5 +235,5 @@ digits a = go a []
          | otherwise = (div a 10):((mod a 10):arr)
 
 wordNumber :: Int -> String
-wordNumber w = concat . (intersperse "-") . (map digToWord) . digits $ w
+wordNumber = concat . (intersperse "-") . (map digToWord) . digits
 
