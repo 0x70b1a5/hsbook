@@ -360,3 +360,4 @@ myMaximumBy f = last . sortBy f
 		1
 -}
 myMinimumBy f = head . sortBy f
+-- finally!
