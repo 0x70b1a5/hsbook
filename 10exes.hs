@@ -125,13 +125,24 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		Scans Exercises
 		1. Modify your fibs function to only return the first 20 Fibonacci
 		numbers.
+-}
+fibs = 1 : scanl (+) 1 fibs
+fibsN n = fibs !! n
+
+fibs20 = take 20 $ 1 : scanl (+) 1 fibs20
+{-
 		2. Modify fibs to return the Fibonacci numbers that are less
 		than 100.
+-}
+fibsLt100 = takeWhile (<100) $ 1 : scanl (+) 1 fibsLt100
+{-
 		3. Try to write the factorial function from Recursion as a
 		scan. You’ll want scanl again, and your start value will be
 		1. Warning: this will also generate an infinite list, so you
 		may want to pass it through a take function or similar.
-		CHAPTER 10. DATA STRUCTURE ORIGAMI 566
+-}
+scanFac = 0 : scanl (*) 1 [2..]
+{-
 		10.10 Chapter Exercises
 		Warm-up and review
 		For the following set of exercises, you are not expected to use
@@ -146,20 +157,41 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		combinations. These will not all correspond to
 		real words in English, although the stop-vowel-stop
 		pattern is common enough that many of them will.
+-}
+stops = "pbtdkg"
+vowels = "aeiou"
+
+sounds = [[x, y, z] | x <- stops, y <- vowels, z <- stops]
+{-
 		b) Modify that function so that it only returns the combinations
 		that begin with a p.
+-}
+pounds = [['p', y, z] | y <- vowels, z <- stops]
+{-
 		c) Now set up lists of nouns and verbs (instead of stops
 		and vowels) and modify the function to make tuples
 		representing possible noun-verb-noun sentences.
+-}
+-- I would rather not
+{-
 		2. What does the following mystery function do? What is
 		its type? Try to get a good sense of what it does before
 		you test it in the REPL to verify it.
-		CHAPTER 10. DATA STRUCTURE ORIGAMI 567
-		seekritFunc x =
-		div (sum (map length (words x)))
+-}
+seekritFunc x =
+	div (sum (map length (words x)))
 		(length (words x))
+-- It returns the average length of the words in a sentence
+
+{-
 		3. We’d really like the answer to be more precise. Can you
-		rewrite that using fractional division?
+		rewrite that using fractional division?	
+-}
+seekritFunc2 x =
+    (fromIntegral (sum (map length (words x))))
+    / (fromIntegral (length (words x)))
+
+{-
 		Rewriting functions using folds
 		In the previous chapter, you wrote these functions using direct
 		recursion over lists. The goal now is to rewrite them using
@@ -169,7 +201,6 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		should look like:
 		myFunc = foldr f z
 		So for example with the and function:
-		CHAPTER 10. DATA STRUCTURE ORIGAMI 568
 		-- Again, this type will be less reusable than
 		-- the one in GHC 7.10 and newer. Don't worry.
 		-- direct recursion, not using (&&)
@@ -193,7 +224,6 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		-- fold, both myAnd and the folding function are point-free now
 		myAnd :: [Bool] -> Bool
 		myAnd = foldr (&&) True
-		CHAPTER 10. DATA STRUCTURE ORIGAMI 569
 		The goal here is to converge on the final version where
 		possible. You don’t need to write all variations for each example,
 		but the more variations you write, the deeper your
@@ -201,6 +231,15 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		1. myOr returns True if any Bool in the list is True.
 		myOr :: [Bool] -> Bool
 		myOr = undefined
+-}
+myOr :: [Bool] -> Bool
+myOr = foldr
+  (\a b ->
+    if a == True
+    then True
+    else b) False
+
+{-
 		2. myAny returns True if a -> Bool applied to any of the values
 		in the list returns True.
 		myAny :: (a -> Bool) -> [a] -> Bool
@@ -209,15 +248,34 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		Prelude> myAny even [1, 3, 5]
 		False
 		Prelude> myAny odd [1, 3, 5]
-		True
+		 True
+-}
+myAny :: (a -> Bool) -> [a] -> Bool
+myAny f = foldr
+  (\a b ->
+    if (f a) == True
+    then True
+    else b) False
+
+{-
 		3. Write two versions of myElem. One version should use
 		folding and the other should use any.
 		myElem :: Eq a => a -> [a] -> Bool
-		CHAPTER 10. DATA STRUCTURE ORIGAMI 570
 		Prelude> myElem 1 [1..10]
 		True
 		Prelude> myElem 1 [2..10]
 		False
+-}
+myElem :: Eq a => a -> [a] -> Bool
+myElem y = foldr
+  (\a b ->
+    if y == a
+    then True
+    else b) False
+
+myElemAny y = any (==y) 
+
+{-
 		4. Implement myReverse, don’t worry about trying to make
 		it lazy.
 		myReverse :: [a] -> [a]
@@ -226,18 +284,34 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		"halb"
 		Prelude> myReverse [1..5]
 		[5,4,3,2,1]
+-}
+rev :: [a] -> [a]
+rev (x:xs) = foldl (flip (:)) [x] xs
+
+{-
 		5. Write myMap in terms of foldr. It should have the same
 		behavior as the built-in map.
 		myMap :: (a -> b) -> [a] -> [b]
 		myMap = undefined
+-}
+myMap :: (a -> b) -> [a] -> [b]
+myMap f = foldr (\a b -> (f a) : b) []
+{-
 		6. Write myFilter in terms of foldr. It should have the same
 		behavior as the built-in filter.
 		myFilter :: (a -> Bool) -> [a] -> [a]
 		myFilter = undefined
-		CHAPTER 10. DATA STRUCTURE ORIGAMI 571
+-}
+myFilter :: (a -> Bool) -> [a] -> [a]
+myFilter f = foldr (\a b -> if (f a) then (a : b) else b) []
+{-
 		7. squish flattens a list of lists into a list
 		squish :: [[a]] -> [a]
 		squish = undefined
+-}
+mySquish :: [[a]] -> [a]
+mySquish = foldr (\a b -> a ++ b) []
+{-
 		8. squishMap maps a function over a list and concatenates the
 		results.
 		squishMap :: (a -> [b]) -> [a] -> [b]
@@ -246,22 +320,33 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		[1,2,3]
 		Prelude> squishMap (\x -> "WO " ++ [x] ++ " OT ") "blah"
 		"WO b OT WO l OT WO a OT WO h OT "
+-}
+squishMap :: (a -> [b]) -> [a] -> [b]
+squishMap f = foldr (\a b -> (f a) ++ b) []
+{-
 		9. squishAgain flattens a list of lists into a list. This time re-use
 		the squishMap function.
 		squishAgain :: [[a]] -> [a]
 		squishAgain = undefined
+-}
+squishAgain :: [[a]] -> [a]
+squishAgain = squishMap (++ [])
+{-
 		10. myMaximumBy takes a comparison function and a list and
 		returns the greatest element of the list based on the last
 		value that the comparison returned GT for.
 		myMaximumBy :: (a -> a -> Ordering) -> [a] -> a
 		myMaximumBy = undefined
-		CHAPTER 10. DATA STRUCTURE ORIGAMI 572
 		Prelude> myMaximumBy (\_ _ -> GT) [1..10]
 		1
 		Prelude> myMaximumBy (\_ _ -> LT) [1..10]
 		10
 		Prelude> myMaximumBy compare [1..10]
 		10
+-}
+myMaximumBy :: (a -> a -> Ordering) -> [a] -> a
+myMaximumBy f = last . sortBy f
+{-
 		11. myMinimumBy takes a comparison function and a list and
 		returns the least element of the list based on the last value
 		that the comparison returned LT for.
@@ -274,3 +359,4 @@ avgDb db = (fromIntegral (sumDb db))/(fromIntegral (length (filterDbNumber db)))
 		Prelude> myMinimumBy compare [1..10]
 		1
 -}
+myMinimumBy f = head . sortBy f
